@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Exportar dados do Magento para OpenCart</title>
+	<meta charset="utf-8">
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="container">
+	<div class="page-header">
+		<h2>Exportar dados do Magento para OpenCart</h2>
+	</div>
+
+	<div class="form-group">
+		<button class="btn btn-info" onclick="exportar(page, 'produtos')" disabled>Exportar produtos</button>
+		<button class="btn btn-info" onclick="exportar(page, 'categorias')" disabled>Exportar categorias</button>
+		<button class="btn btn-info" onclick="exportar(page, 'clientes')" disabled>Exportar clientes</button>
+	</div>
+
+	<pre id="result"></pre>
+</div>
+
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script>
+var page = 1;
+var maximo = {
+	produtos: 1,
+	categorias: 1,
+	clientes: 1
+};
+function exportar(pagina, acao) {
+	if (pagina == 0 || pagina > max) {
+		return;
+	}
+	$.ajax({
+		url: 'exportar.php?page=' + pagina + '&acao=' + acao,
+		type: 'get',
+		beforeSend: function(request){
+			$('#result').append("Processando " + pagina + ", aguarde...\n");
+		},
+		success: function(result){
+			$('#result').append(result + "\n");
+			page++;
+			if (page <= maximo[acao]) {
+				exportar(page);
+			}
+		},
+		error: function(xhr){
+			$('#result').append("Erro ao processar " + pagina + "\n");
+		}
+	});
+}
+$.ajax({
+	url: 'dados.php',
+	type: 'get',
+	dataType: 'json',
+	beforeSend: function(request){
+		$('#result').append("Aguarde...\n");
+	},
+	success: function(result){
+		maximo = result;
+		$('#result').append("Pronto para fazer exportação\n");
+		$('button.btn').attr('disabled', false);
+	},
+	error: function(xhr){
+		$('#result').append("Erro ao processar dados.php\n");
+	}
+});
+</script>
+
+</body>
+</html>
