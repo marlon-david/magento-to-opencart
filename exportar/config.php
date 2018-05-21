@@ -46,8 +46,8 @@ error_reporting(E_ALL);
 
 /* autoload */
 spl_autoload_register(function($class) {
-	if (substr($class, 0, 11) == 'MageToOc\\') {
-		$file = './classes/' . str_replace('\\', '/', substr($class, 11)) . '.php';
+	if (substr($class, 0, 9) == 'MageToOc\\') {
+		$file = __DIR__ . '/classes/' . str_replace('\\', '/', substr($class, 9)) . '.php';
 
 		if (file_exists($file)) {
 			require $file;

@@ -14,9 +14,9 @@
 	</div>
 
 	<div class="form-group">
-		<button class="btn btn-info" onclick="exportar(page, 'produtos')" disabled>Exportar produtos</button>
-		<button class="btn btn-info" onclick="exportar(page, 'categorias')" disabled>Exportar categorias</button>
-		<button class="btn btn-info" onclick="exportar(page, 'clientes')" disabled>Exportar clientes</button>
+		<button class="btn btn-info" onclick="page=1;exportar(page, 'produtos')" disabled>Exportar produtos</button>
+		<button class="btn btn-info" onclick="page=1;exportar(page, 'categorias')" disabled>Exportar categorias</button>
+		<button class="btn btn-info" onclick="page=1;exportar(page, 'clientes')" disabled>Exportar clientes</button>
 	</div>
 
 	<pre id="result"></pre>
@@ -34,24 +34,28 @@ var maximo = {
 	clientes: 1
 };
 function exportar(pagina, acao) {
-	if (pagina == 0 || pagina > max) {
+	if (pagina == 0 || pagina > maximo[acao]) {
 		return;
 	}
 	$.ajax({
 		url: 'exportar.php?page=' + pagina + '&acao=' + acao,
 		type: 'get',
 		beforeSend: function(request){
-			$('#result').append("Processando " + pagina + ", aguarde...\n");
+			$('#result').append("Processando " + pagina + "/" + maximo[acao] + ", aguarde...\n");
+			$('button.btn').attr('disabled', true);
 		},
 		success: function(result){
 			$('#result').append(result + "\n");
 			page++;
 			if (page <= maximo[acao]) {
-				exportar(page);
+				exportar(page, acao);
+			} else {
+				$('button.btn').attr('disabled', false);
 			}
 		},
 		error: function(xhr){
 			$('#result').append("Erro ao processar " + pagina + "\n");
+			$('button.btn').attr('disabled', false);
 		}
 	});
 }
