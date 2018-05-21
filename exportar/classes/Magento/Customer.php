@@ -55,7 +55,7 @@ class Customer extends MageToOc {
 			$oc = new OCCustomer;
 
 			$oc->data['customer_id'] = (int)$data['entity_id'];
-			$oc->data['address_id'] = (int)$data['default_shipping'];
+			$oc->data['address_id'] = 0;
 			$oc->data['status'] = ($data['is_active'] == 1) ? 1 : 0;
 			$oc->data['email'] = (string)$data['email'];
 			$oc->data['firstname'] = (string)$data['firstname'];
@@ -84,18 +84,22 @@ class Customer extends MageToOc {
 
 			$ids = array();
 
-			if ($data['default_shipping']) {
-				$ids[] = $data['default_shipping'];
+			if ((int)$data['default_shipping']) {
+				$ids[] = (int)$data['default_shipping'];
 			}
 
-			if ($data['default_billing'] && !in_array($data['default_billing'], $ids)) {
-				$ids[] = $data['default_billing'];
+			if ($data['default_billing'] && !in_array((int)$data['default_billing'], $ids)) {
+				$ids[] = (int)$data['default_billing'];
 			}
 
 			foreach ($ids as $id) {
 				$address = $modelAddr->load($id);
 
 				$data = $address->toArray();
+
+				if ($address->getCustomerId() != $oc->data['customer_id']) {
+					continue;
+				}
 
 				if (!isset($zones[$data['region_id']])) {
 					if (isset(OCAddress::$zones[$data['region']])) {
@@ -106,7 +110,7 @@ class Customer extends MageToOc {
 				}
 
 				$ocAddr = new OCAddress();
-				$ocAddr->data['address_id'] = (int)$data['entity_id'];
+				$ocAddr->data['address_id'] = $id;
 				$ocAddr->data['customer_id'] = (int)$customer->getId();
 				$ocAddr->data['zone_id'] = $zones[$data['region_id']];
 				$ocAddr->data['postcode'] = (string)$data['postcode'];
@@ -120,20 +124,24 @@ class Customer extends MageToOc {
 				$custom = array();
 
 				if (self::CUSTOM_FIELD_ID_NUMERO) {
-					$custom[CUSTOM_FIELD_ID_NUMERO] = $address->getStreet2();
+					$custom[self::CUSTOM_FIELD_ID_NUMERO] = $address->getStreet2();
 				}
 
 				if (self::CUSTOM_FIELD_ID_COMPLEMENTO) {
-					$custom[CUSTOM_FIELD_ID_COMPLEMENTO] = $address->getStreet3();
+					$custom[self::CUSTOM_FIELD_ID_COMPLEMENTO] = $address->getStreet3();
 				}
 
 				$ocAddr->setCustomFields($custom);
 
-				if (empty($oc->data['telephone'])) {
+				if (empty($oc->data['address_id'])) {
+					$oc->data['address_id'] = $id;
+				}
+
+				if (empty($oc->data['telephone']) && !empty($data['telephone'])) {
 					$oc->data['telephone'] = $data['telephone'];
 				}
 
-				if (empty($oc->data['fax'])) {
+				if (empty($oc->data['fax']) && !empty($data['fax'])) {
 					$oc->data['fax'] = $data['fax'];
 				}
 
